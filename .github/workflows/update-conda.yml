@@ -24,11 +24,11 @@ jobs:
           ref: gh-pages
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install pixi and rattler-build
+      - name: Install pixi and rattler-index
         run: |
           curl -fsSL https://pixi.sh/install.sh | bash
           export PATH="$HOME/.pixi/bin:$PATH"
-          pixi global install rattler-build
+          pixi global install rattler-index
 
       - name: Add pixi to PATH
         run: echo "$HOME/.pixi/bin" >> $GITHUB_PATH
@@ -58,21 +58,26 @@ jobs:
 
       - name: Copy packages to conda channel
         run: |
-          for platform in linux-64 osx-64 osx-arm64 win-64 noarch; do
-            if [ -d "new-packages/$platform" ]; then
-              mkdir -p conda/$platform
-              cp -v new-packages/$platform/*.conda conda/$platform/ || true
+          echo "Downloaded artifact contents:"
+          find new-packages -type f -name '*.conda' | sort
+
+          copied=0
+          for platform in linux-64 linux-aarch64 osx-64 osx-arm64 win-64 noarch; do
+            if compgen -G "new-packages/$platform/*.conda" > /dev/null; then
+              mkdir -p "conda/$platform"
+              cp -v new-packages/$platform/*.conda "conda/$platform/"
+              copied=$((copied + 1))
             fi
           done
 
+          if [ "$copied" -eq 0 ]; then
+            echo "::error::No conda packages found in any platform subdirectory."
+            echo "Packages in new-packages/broken/ mean the build produced a package that failed its tests."
+            exit 1
+          fi
+
       - name: Update repodata
-        run: |
-          for platform in linux-64 osx-64 osx-arm64 win-64 noarch; do
-            if [ -d "conda/$platform" ] && [ "$(ls -A conda/$platform/*.conda 2>/dev/null)" ]; then
-              echo "Updating repodata for $platform..."
-              rattler-index --channel-dir conda --subdir $platform
-            fi
-          done
+        run: rattler-index fs conda --force
 
       - name: Commit and push
         run: |
