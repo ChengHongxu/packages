@@ -1,0 +1,10 @@
+# Ignore conda package files (tracked separately or served from releases)
+*.conda
+*.tar.bz2
+
+# Ignore Homebrew bottles
+*.bottle.tar.gz
+
+# Keep index files
+!repodata.json
+!repodata_from_packages.json
