@@ -49,9 +49,9 @@ jobs:
       - name: Download conda packages
         uses: actions/download-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repo: ChengHongxu/${{ steps.pkg.outputs.PACKAGE }}
-          run_id: ${{ steps.pkg.outputs.RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ChengHongxu/${{ steps.pkg.outputs.PACKAGE }}
+          run-id: ${{ steps.pkg.outputs.RUN_ID }}
           pattern: conda-package-*
           path: new-packages
           merge-multiple: true
